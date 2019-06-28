@@ -108,7 +108,7 @@ You can call this by running `python train.py MODEL Cora` (or `Pubmed` or
 To run experiments on this task, you need to download the data from 
 https://github.com/kimiyoung/planetoid/raw/master/data. By default, the
 code looks for this data in `data/citation-networks`, but this can be changed
-by using `--task-param-overrides '{"data_directory": "SOME/OTHER/DIR"}'`.
+by using `--data-path "SOME/OTHER/DIR"`.
 
 ## PPI
 The `PPI` task (implemented in `tasks/ppi_task.py`) handles the protein-protein
@@ -120,7 +120,7 @@ You can call this by running `python train.py MODEL PPI`.
 To run experiments on this task, you need to download the data from
 https://s3.us-east-2.amazonaws.com/dgl.ai/dataset/ppi.zip. By default, the
 code looks for this data in `data/ppi`, but this can be changed
-by using `--task-param-overrides '{"ppi_data_path": "SOME/OTHER/DIR"}'`.
+by using `--data-path "SOME/OTHER/DIR"`.
 
 ## QM9
 The `QM9` task (implemented in `tasks/qm9_task.py`) handles the quantum chemistry
@@ -146,7 +146,7 @@ You can call this by running `python train.py MODEL VarMisuse`.
 To run experiments on this task, you need to download the data from
 https://aka.ms/iclr18-prog-graphs-dataset and unzip it.
 By default, the code looks for this data in `data/varmisuse/`, but this can be 
-changed by using `--task-param-overrides '{"varmisuse_data_path": "SOME/OTHER/DIR"}'`.
+changed by using `--data-path "SOME/OTHER/DIR"`.
 
 # References
 
