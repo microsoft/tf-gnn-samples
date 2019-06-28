@@ -85,7 +85,7 @@ def run(args):
     model.log_line(" Using the following model params: %s" % json.dumps(model_params))
 
     model.initialize_model()
-    model_path = model.train(quiet=args.get('--quiet'), tf_summary_path=args.get('--tensorboard'))
+    model.train(quiet=args.get('--quiet'), tf_summary_path=args.get('--tensorboard'))
 
     if args.get('--run-test'):
         test(model.best_model_file, data_path, result_dir, quiet=args.get('--quiet'))
