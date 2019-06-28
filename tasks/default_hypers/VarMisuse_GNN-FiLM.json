@@ -1,0 +1,11 @@
+{
+    "task_params": {
+        "add_self_loop_edges": true
+    },
+    "model_params": {
+        "hidden_size": 72,
+        "patience": 5,
+        "learning_rate": 0.00015,
+        "max_nodes_in_batch": 100000
+    }
+}

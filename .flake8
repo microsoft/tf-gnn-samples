@@ -1,0 +1,5 @@
+[flake8]
+max-line-length = 150
+ignore =
+    # W605: invalid escape sequence -- triggered by pseudo-LaTeX in comments
+    W605,
