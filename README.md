@@ -1,13 +1,15 @@
 # TF Graph Neural Network Samples
-This repository contains tensorflow implementations of a range of Graph Neural
-Network models supporting several edge types:
+This repository is the code release corresponding to an article introducing
+graph neural networks (GNNs) with feature-wise linear modulation ([Brockschmidt, 2019](#brockschmidt-2019)).
+In the paper, a number of GNN architectures are discussed:
 * Gated Graph Neural Networks (GGNN) ([Li et al., 2015](#li-et-al-2015)).
 * Relational Graph Convolutional Networks (RGCN) ([Schlichtkrull et al., 2016](#schlichtkrull-et-al-2016)).
 * Relational Graph Attention Networks (RGAT) - a generalisation of Graph Attention Networks ([Veličković et al., 2018](#veličković-et-al-2018)) to several edge types.
 * Relational Graph Dynamic Convolution Networks (RGDCN) - a new variant of RGCN in which the weights of convolutional layers are dynamically computed.
 * Graph Neural Networks with Feature-wise Linear Modulation (GNN-FiLM) - a new extension of RGCN with FiLM layers.
 
-Additionally, we provide the code to train and evaluate these networks on some tasks (see below).
+The results presented in the paper are based on the implementations of models
+and tasks provided in this repository.
 
 This code was tested in Python 3.6 with TensorFlow 1.13.1.
 To install required packages, run `pip install -r requirements.txt`.
@@ -152,8 +154,12 @@ changed by using `--data-path "SOME/OTHER/DIR"`.
 
 #### Allamanis et al., 2018
 Miltiadis Allamanis, Marc Brockschmidt, and Mahmoud Khademi. Learning to
-represent programs with graphs. In International Conference on Learning
+Represent Programs with Graphs. In International Conference on Learning
 Representations (ICLR), 2018. (https://arxiv.org/pdf/1711.00740.pdf)
+
+#### Brockschmidt, 2019
+Marc Brockschmidt. GNN-FiLM: Graph Neural Networks with Feature-wise Linear
+Modulation. (https://arxiv.org/abs/1906.12192)
 
 #### Li et al., 2015
 Yujia Li, Daniel Tarlow, Marc Brockschmidt, and Richard Zemel. Gated Graph
@@ -162,8 +168,8 @@ Representations (ICLR), 2016. (https://arxiv.org/pdf/1511.05493.pdf)
 
 #### Ramakrishnan et al., 2014
 Raghunathan Ramakrishnan, Pavlo O. Dral, Matthias Rupp, and O. Anatole
-Von Lilienfeld. Quantum chemistry structures and properties of 134 kilo
-molecules. Scientific Data, 1, 2014.
+Von Lilienfeld. Quantum Chemistry Structures and Properties of 134 Kilo
+Molecules. Scientific Data, 1, 2014.
 (https://www.nature.com/articles/sdata201422/)
 
 #### Schlichtkrull et al., 2017
@@ -174,7 +180,7 @@ Convolutional Networks. In Extended Semantic Web Conference (ESWC), 2018.
 
 #### Sen et al., 2008
 Prithviraj Sen, Galileo Namata, Mustafa Bilgic, Lise Getoor, Brian Galligher,
-and Tina Eliassi-Rad. Collective classification in network data. AI magazine,
+and Tina Eliassi-Rad. Collective Classification in Network Data. AI magazine,
 29, 2008. (https://www.aaai.org/ojs/index.php/aimagazine/article/view/2157)
 
 #### Veličković et al. 2018
@@ -183,8 +189,8 @@ Liò, and Yoshua Bengio. Graph Attention Networks. In International Conference
 on Learning Representations (ICLR), 2018. (https://arxiv.org/pdf/1710.10903.pdf)
 
 #### Zitnik & Leskovec, 2017
-Marinka Zitnik and Jure Leskovec. Predicting multicellular function through
-multi-layer tissue networks. Bioinformatics, 33, 2017.
+Marinka Zitnik and Jure Leskovec. Predicting Multicellular Function Through
+Multi-layer Tissue Networks. Bioinformatics, 33, 2017.
 (https://arxiv.org/abs/1707.04638)
 
 # Contributing
