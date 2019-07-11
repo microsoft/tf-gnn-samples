@@ -124,6 +124,16 @@ https://s3.us-east-2.amazonaws.com/dgl.ai/dataset/ppi.zip. By default, the
 code looks for this data in `data/ppi`, but this can be changed
 by using `--data-path "SOME/OTHER/DIR"`.
 
+### Current Results
+Running `python run_ppi_benchs.py ppi_results/` should yield results looking
+like this (on an NVidia V100):
+| Model      | Avg. MicroF1      | Avg. Time  |
+|------------|-------------------|------------|
+| GGNN       | 0.990 (+/- 0.001) |      432.6 |
+| RGCN       | 0.989 (+/- 0.000) |      759.0 |
+| GAT        | 0.989 (+/- 0.001) |      782.3 |
+| GNN-FiLM   | 0.992 (+/- 0.000) |      374.6 |
+
 ## QM9
 The `QM9` task (implemented in `tasks/qm9_task.py`) handles the quantum chemistry
 prediction tasks first described by [Ramakrishnan et al., 2014](#ramakrishnan-et-al-2014)
