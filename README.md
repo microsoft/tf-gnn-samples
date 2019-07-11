@@ -127,6 +127,7 @@ by using `--data-path "SOME/OTHER/DIR"`.
 ### Current Results
 Running `python run_ppi_benchs.py ppi_results/` should yield results looking
 like this (on an NVidia V100):
+
 | Model      | Avg. MicroF1      | Avg. Time  |
 |------------|-------------------|------------|
 | GGNN       | 0.990 (+/- 0.001) |      432.6 |
