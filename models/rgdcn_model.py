@@ -1,4 +1,4 @@
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Union
 
 import tensorflow as tf
 
@@ -20,6 +20,7 @@ class RGDCN_Model(Sparse_Graph_Model):
             "graph_activation_function": "ReLU",
             "message_aggregation_function": "sum",
             'graph_inter_layer_norm': True,
+            'graph_message_weights_dropout_ratio': 0.0,
         })
         return params
 
@@ -35,7 +36,11 @@ class RGDCN_Model(Sparse_Graph_Model):
                          node_representations: tf.Tensor,
                          adjacency_lists: List[tf.Tensor],
                          type_to_num_incoming_edges: tf.Tensor,
-                         num_timesteps: int) -> tf.Tensor:
+                         num_timesteps: int,
+                         message_weights_dropout_ratio: Union[float, tf.Tensor],
+                         ) -> tf.Tensor:
+        assert self.params['graph_message_weights_dropout_ratio'] == 0.0, \
+            "graph_message_weights_dropout_ratio does not apply to RGDCN model."
         return sparse_rgdcn_layer(
             node_embeddings=node_representations,
             adjacency_lists=adjacency_lists,
@@ -47,4 +52,5 @@ class RGDCN_Model(Sparse_Graph_Model):
             tie_channel_weights=self.params['tie_channel_weights'],
             activation_function=self.params['graph_activation_function'],
             message_aggregation_function=self.params['message_aggregation_function'],
+            message_weights_dropout_ratio=message_weights_dropout_ratio,
         )

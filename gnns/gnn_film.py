@@ -1,8 +1,8 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 import tensorflow as tf
 
 
-from utils import get_activation, get_aggregation_function, SMALL_NUMBER
+from utils import get_activation, get_aggregation_function, SMALL_NUMBER, DenseWithWeightDropout
 
 
 def sparse_gnn_film_layer(node_embeddings: tf.Tensor,
@@ -13,6 +13,7 @@ def sparse_gnn_film_layer(node_embeddings: tf.Tensor,
                           activation_function: Optional[str] = "ReLU",
                           message_aggregation_function: str = "sum",
                           normalize_by_num_incoming: bool = False,
+                          message_weights_dropout_ratio: Union[tf.Tensor, float] = 0.0,
                           ) -> tf.Tensor:
     """
     Compute new graph states by neural message passing modulated by the target state.
@@ -51,6 +52,8 @@ def sparse_gnn_film_layer(node_embeddings: tf.Tensor,
         message_aggregation_function: Type of aggregation function used for messages.
         normalize_by_num_incoming: Flag indicating if messages should be scaled by 1/(number
             of incoming edges).
+        message_weights_dropout_ratio: Dropout ratio applied to the weights used
+            to compute message passing functions.
 
     Returns:
         float32 tensor of shape [V, state_dim]
@@ -67,10 +70,11 @@ def sparse_gnn_film_layer(node_embeddings: tf.Tensor,
     edge_type_to_message_targets = []  # List of tensors of message targets
     for edge_type_idx, adjacency_list_for_edge_type in enumerate(adjacency_lists):
         edge_type_to_message_transformation_layers.append(
-            tf.keras.layers.Dense(units=state_dim,
-                                  use_bias=False,
-                                  activation=None,  # Activation only after FiLM modulation
-                                  name="Edge_%i_Weight" % edge_type_idx))
+            DenseWithWeightDropout(units=state_dim,
+                                   use_bias=False,
+                                   activation=None,  # Activation only after FiLM modulation
+                                   dropout_ratio=message_weights_dropout_ratio,
+                                   name="Edge_%i_Weight" % edge_type_idx))
         edge_type_to_film_computation_layers.append(
             tf.keras.layers.Dense(units=2 * state_dim,  # Computes \gamma, \beta in one go
                                   use_bias=False,

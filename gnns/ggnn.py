@@ -1,8 +1,8 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import tensorflow as tf
 
-from utils import get_gated_unit, get_aggregation_function
+from utils import get_gated_unit, get_aggregation_function, DenseWithWeightDropout
 
 
 def sparse_ggnn_layer(node_embeddings: tf.Tensor,
@@ -11,7 +11,8 @@ def sparse_ggnn_layer(node_embeddings: tf.Tensor,
                       num_timesteps: int = 1,
                       gated_unit_type: str = "gru",
                       activation_function: str = "tanh",
-                      message_aggregation_function: str = "sum"
+                      message_aggregation_function: str = "sum",
+                      message_weights_dropout_ratio: Union[tf.Tensor, float] = 0.0,
                       ) -> tf.Tensor:
     """
     Compute new graph states by neural message passing and gated units on the nodes.
@@ -43,6 +44,8 @@ def sparse_ggnn_layer(node_embeddings: tf.Tensor,
         gated_unit_type: Type of the recurrent unit used (one of RNN, GRU and LSTM).
         activation_function: Type of activation function used.
         message_aggregation_function: Type of aggregation function used for messages.
+        message_weights_dropout_ratio: Dropout ratio applied to the weights used
+            to compute message passing functions.
 
     Returns:
         float32 tensor of shape [V, state_dim]
@@ -58,10 +61,11 @@ def sparse_ggnn_layer(node_embeddings: tf.Tensor,
     edge_type_to_message_targets = []  # List of tensors of message targets
     for edge_type_idx, adjacency_list_for_edge_type in enumerate(adjacency_lists):
         edge_type_to_message_transformation_layers.append(
-            tf.keras.layers.Dense(units=state_dim,
-                                  use_bias=False,
-                                  activation=None,
-                                  name="Edge_%i_Weight" % edge_type_idx))
+            DenseWithWeightDropout(units=state_dim,
+                                   use_bias=False,
+                                   activation=None,
+                                   dropout_ratio=message_weights_dropout_ratio,
+                                   name="Edge_%i_Weight" % edge_type_idx))
         edge_type_to_message_targets.append(adjacency_list_for_edge_type[:, 1])
 
     # Let M be the number of messages (sum of all E):

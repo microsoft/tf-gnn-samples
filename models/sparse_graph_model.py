@@ -3,7 +3,7 @@ import pickle
 import random
 import time
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional, Tuple, List, Iterable
+from typing import Any, Dict, Optional, Tuple, List, Iterable, Union
 
 import tensorflow as tf
 import numpy as np
@@ -27,7 +27,8 @@ class Sparse_Graph_Model(ABC):
             'graph_num_layers': 8,
             'graph_num_timesteps_per_layer': 1,
 
-            'graph_layer_input_dropout_keep_prob': 0.8,
+            'graph_layer_input_dropout_keep_prob': 0.9,
+            'graph_message_weights_dropout_ratio': 0.0,
             'graph_dense_between_every_num_gnn_layers': 1,
             'graph_model_activation_function': 'tanh',
             'graph_residual_connection_every_num_layers': 2,
@@ -133,6 +134,8 @@ class Sparse_Graph_Model(ABC):
                 tf.placeholder(dtype=tf.int64, shape=[], name='num_graphs')
             self.__placeholders['graph_layer_input_dropout_keep_prob'] = \
                 tf.placeholder_with_default(1.0, shape=[], name='graph_layer_input_dropout_keep_prob')
+            self.__placeholders['graph_message_weights_dropout_ratio'] = \
+                tf.placeholder_with_default(0.0, shape=[], name='graph_message_weights_dropout_ratio')
 
             self.__build_graph_propagation_model()
 
@@ -182,10 +185,12 @@ class Sparse_Graph_Model(ABC):
                     last_residual_representations = t
                 cur_node_representations = \
                     self._apply_gnn_layer(
-                        cur_node_representations,
-                        self.__ops['adjacency_lists'],
-                        self.__ops['type_to_num_incoming_edges'],
-                        self.params['graph_num_timesteps_per_layer'])
+                        node_representations=cur_node_representations,
+                        adjacency_lists=self.__ops['adjacency_lists'],
+                        type_to_num_incoming_edges=self.__ops['type_to_num_incoming_edges'],
+                        num_timesteps=self.params['graph_num_timesteps_per_layer'],
+                        message_weights_dropout_ratio=self.__placeholders['graph_message_weights_dropout_ratio'],
+                    )
                 if self.params['graph_inter_layer_norm']:
                     cur_node_representations = tf.contrib.layers.layer_norm(cur_node_representations)
                 if layer_idx % self.params['graph_dense_between_every_num_gnn_layers'] == 0:
@@ -203,7 +208,9 @@ class Sparse_Graph_Model(ABC):
                          node_representations: tf.Tensor,
                          adjacency_lists: List[tf.Tensor],
                          type_to_num_incoming_edges: tf.Tensor,
-                         num_timesteps: int) -> tf.Tensor:
+                         num_timesteps: int,
+                         message_weights_dropout_ratio: Union[float, tf.Tensor],
+                         ) -> tf.Tensor:
         """
         Run a GNN layer on a graph.
 
@@ -218,6 +225,8 @@ class Sparse_Graph_Model(ABC):
                 type_to_num_incoming_edges[l, v] = k indicates that node v has k incoming
                 edges of type l.
             num_timesteps: Number of propagation steps in to run in this GNN layer.
+            message_weights_dropout_ratio: Dropout ratio applied to the weights used
+                to compute message passing functions.
         """
         raise Exception("Models have to implement _apply_gnn_layer!")
 
@@ -264,6 +273,8 @@ class Sparse_Graph_Model(ABC):
             if data_fold == DataFold.TRAIN:
                 batch_data.feed_dict[self.__placeholders['graph_layer_input_dropout_keep_prob']] = \
                     self.params['graph_layer_input_dropout_keep_prob']
+                batch_data.feed_dict[self.__placeholders['graph_message_weights_dropout_ratio']] = \
+                    self.params.get('graph_message_weights_dropout_ratio', 0.0)
             batch_data.feed_dict[self.__placeholders['num_graphs']] = batch_data.num_graphs
             # Collect some statistics:
             processed_graphs += batch_data.num_graphs

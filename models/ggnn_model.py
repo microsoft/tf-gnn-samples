@@ -1,4 +1,4 @@
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Union
 
 import tensorflow as tf
 
@@ -16,7 +16,6 @@ class GGNN_Model(Sparse_Graph_Model):
             'graph_rnn_cell': 'GRU',  # RNN, GRU, or LSTM
             'graph_activation_function': "tanh",
             "message_aggregation_function": "sum",
-            'graph_layer_input_dropout_keep_prob': 1.0,
             'graph_dense_between_every_num_gnn_layers': 10000,
             'graph_residual_connection_every_num_layers': 10000,
         })
@@ -33,7 +32,9 @@ class GGNN_Model(Sparse_Graph_Model):
                          node_representations: tf.Tensor,
                          adjacency_lists: List[tf.Tensor],
                          type_to_num_incoming_edges: tf.Tensor,
-                         num_timesteps: int) -> tf.Tensor:
+                         num_timesteps: int,
+                         message_weights_dropout_ratio: Union[float, tf.Tensor],
+                         ) -> tf.Tensor:
         return sparse_ggnn_layer(
             node_embeddings=node_representations,
             adjacency_lists=adjacency_lists,
@@ -42,4 +43,5 @@ class GGNN_Model(Sparse_Graph_Model):
             gated_unit_type=self.params['graph_rnn_cell'],
             activation_function=self.params['graph_activation_function'],
             message_aggregation_function=self.params['message_aggregation_function'],
+            message_weights_dropout_ratio=message_weights_dropout_ratio,
         )

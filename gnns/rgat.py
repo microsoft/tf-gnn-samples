@@ -1,9 +1,9 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import tensorflow as tf
 from dpu_utils.tfutils import unsorted_segment_log_softmax
 
-from utils import get_activation
+from utils import get_activation, DenseWithWeightDropout
 
 
 def sparse_rgat_layer(node_embeddings: tf.Tensor,
@@ -11,7 +11,8 @@ def sparse_rgat_layer(node_embeddings: tf.Tensor,
                       state_dim: Optional[int],
                       num_heads: int = 4,
                       num_timesteps: int = 1,
-                      activation_function: Optional[str] = "tanh"
+                      activation_function: Optional[str] = "tanh",
+                      message_weights_dropout_ratio: Union[tf.Tensor, float] = 0.0,
                       ) -> tf.Tensor:
     """
     Compute new graph states by neural message passing using attention. This generalises
@@ -51,6 +52,8 @@ def sparse_rgat_layer(node_embeddings: tf.Tensor,
         num_heads: Number of attention heads to use.
         num_timesteps: Number of repeated applications of this message passing layer.
         activation_function: Type of activation function used.
+        message_weights_dropout_ratio: Dropout ratio applied to the weights used
+            to compute message passing functions.
 
     Returns:
         float32 tensor of shape [V, state_dim]
@@ -67,10 +70,11 @@ def sparse_rgat_layer(node_embeddings: tf.Tensor,
     edge_type_to_message_targets = []  # List of tensors of message targets
     for edge_type_idx, adjacency_list_for_edge_type in enumerate(adjacency_lists):
         edge_type_to_state_transformation_layers.append(
-            tf.keras.layers.Dense(units=state_dim,
-                                  use_bias=False,
-                                  activation=None,
-                                  name="Edge_%i_Weight" % edge_type_idx))
+            DenseWithWeightDropout(units=state_dim,
+                                   use_bias=False,
+                                   activation=None,
+                                   dropout_ratio=message_weights_dropout_ratio,
+                                   name="Edge_%i_Weight" % edge_type_idx))
         edge_type_to_attention_parameters.append(
             tf.get_variable(shape=(2 * state_dim),
                             name="Edge_%i_Attention_Parameters" % edge_type_idx))

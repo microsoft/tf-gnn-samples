@@ -15,7 +15,7 @@ def sparse_rgdcn_layer(node_embeddings: tf.Tensor,
                        tie_channel_weights: bool = False,
                        activation_function: Optional[str] = "tanh",
                        message_aggregation_function: str = "sum",
-                       normalize_by_num_incoming: bool = True,
+                       normalize_by_num_incoming: bool = True
                        ) -> tf.Tensor:
     """
     Compute new graph states by message passing using dynamic convolutions for edge kernels.

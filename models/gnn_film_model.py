@@ -1,4 +1,4 @@
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Union
 
 import tensorflow as tf
 
@@ -30,7 +30,9 @@ class GNN_FiLM_Model(Sparse_Graph_Model):
                          node_representations: tf.Tensor,
                          adjacency_lists: List[tf.Tensor],
                          type_to_num_incoming_edges: tf.Tensor,
-                         num_timesteps: int) -> tf.Tensor:
+                         num_timesteps: int,
+                         message_weights_dropout_ratio: Union[float, tf.Tensor],
+                         ) -> tf.Tensor:
         return sparse_gnn_film_layer(
             node_embeddings=node_representations,
             adjacency_lists=adjacency_lists,
@@ -40,4 +42,5 @@ class GNN_FiLM_Model(Sparse_Graph_Model):
             activation_function=self.params['graph_activation_function'],
             message_aggregation_function=self.params['message_aggregation_function'],
             normalize_by_num_incoming=self.params["normalize_messages_by_num_incoming"],
+            message_weights_dropout_ratio=message_weights_dropout_ratio,
         )
