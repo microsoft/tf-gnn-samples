@@ -128,12 +128,13 @@ by using `--data-path "SOME/OTHER/DIR"`.
 Running `python run_ppi_benchs.py ppi_results/` should yield results looking
 like this (on an NVidia V100):
 
-| Model      | Avg. MicroF1      | Avg. Time  |
-|------------|-------------------|------------|
-| GGNN       | 0.990 (+/- 0.001) |      432.6 |
-| RGCN       | 0.989 (+/- 0.000) |      759.0 |
-| GAT        | 0.989 (+/- 0.001) |      782.3 |
-| GNN-FiLM   | 0.992 (+/- 0.000) |      374.6 |
+| Model        | Avg. MicroF1      | Avg. Time  |
+|--------------|-------------------|------------|
+| GGNN         | 0.990 (+/- 0.001) |      432.6 |
+| RGCN         | 0.989 (+/- 0.000) |      759.0 |
+| GAT          | 0.989 (+/- 0.001) |      782.3 |
+| GNN-Edge-MLP | 0.992 (+/- 0.001) |      479.2 |
+| GNN-FiLM     | 0.992 (+/- 0.000) |      308.1 |
 
 ## QM9
 The `QM9` task (implemented in `tasks/qm9_task.py`) handles the quantum chemistry

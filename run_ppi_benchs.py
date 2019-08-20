@@ -16,7 +16,7 @@ import numpy as np
 from docopt import docopt
 from dpu_utils.utils import run_and_debug
 
-MODEL_TYPES = ["GGNN", "RGCN", "RGAT", "GNN_FiLM"]
+MODEL_TYPES = ["GGNN", "RGCN", "RGAT", "GNN-Edge-MLP", "GNN_FiLM"]
 
 TEST_RES_RE = re.compile('^Metrics: Avg MicroF1: (0.\d+)')
 TIME_RE = re.compile('^Training took (\d+)s')
@@ -27,8 +27,8 @@ def run(args):
     os.makedirs(target_dir, exist_ok=True)
     print("Starting PPI experiments, will write logfiles for runs into %s." % target_dir)
     num_seeds = int(args.get('--num-runs'))
-    print("| %- 10s | %- 17s | %- 10s |" % ("Model", "Avg. MicroF1", "Avg. Time"))
-    print("|" + "-" * 12 + "|" + "-" * 19 + "|" + "-" * 12 + "|")
+    print("| %- 12s | %- 17s | %- 10s |" % ("Model", "Avg. MicroF1", "Avg. Time"))
+    print("|" + "-" * 14 + "|" + "-" * 19 + "|" + "-" * 12 + "|")
     for model in MODEL_TYPES:
         model_f1s = []
         model_times = []
@@ -55,7 +55,7 @@ def run(args):
                     elif res_match is not None:
                         model_f1s.append(float(res_match.groups()[0]))
 
-        print("| %- 10s | %.3f (+/- %.3f) |     % 4.1f |"
+        print("| %- 12s | %.3f (+/- %.3f) |     % 4.1f |"
               % (model,
                  np.mean(model_f1s),
                  np.std(model_f1s),
