@@ -12,6 +12,7 @@ Options:
     --quiet                         Show less output.
     --debug                         Turn on debugger.
 """
+import json
 from typing import Optional
 
 from docopt import docopt
