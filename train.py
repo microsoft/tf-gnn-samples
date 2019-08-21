@@ -35,8 +35,6 @@ def run(args):
     model_cls = name_to_model_class(args['MODEL_NAME'])
     task_cls, additional_task_params = name_to_task_class(args['TASK_NAME'])
 
-    run_id = "_".join([task_cls.name(), model_cls.name(), time.strftime("%Y-%m-%d-%H-%M-%S"), str(os.getpid())])
-
     # Collect parameters from first the class defaults, potential task defaults, and then CLI:
     task_params = task_cls.default_params()
     task_params.update(additional_task_params)
@@ -72,23 +70,33 @@ def run(args):
     data_path = args.get('--data-path') or task.default_data_path()
     data_path = RichPath.create(data_path, azure_info_path)
     task.load_data(data_path)
-    model = model_cls(model_params, task, run_id, result_dir)
-    model.log_line("Run %s starting." % run_id)
-    if sys.stdin.isatty():
-        try:
-            git_sha = git_tag_run(run_id)
-            model.log_line(" git tagged as %s" % git_sha)
-        except:
-            print(" Tried tagging run in git, but failed.")
-            pass
-    model.log_line(" Using the following task params: %s" % json.dumps(task_params_orig))
-    model.log_line(" Using the following model params: %s" % json.dumps(model_params))
 
-    model.initialize_model()
-    model.train(quiet=args.get('--quiet'), tf_summary_path=args.get('--tensorboard'))
+    random_seeds = model_params['random_seed']
+    if not isinstance(random_seeds, list):
+        random_seeds = [random_seeds]
 
-    if args.get('--run-test'):
-        test(model.best_model_file, data_path, result_dir, quiet=args.get('--quiet'))
+    for random_seed in random_seeds:
+        model_params['random_seed'] = random_seed
+        run_id = "_".join([task_cls.name(), model_cls.name(), time.strftime("%Y-%m-%d-%H-%M-%S"), str(os.getpid())])
+
+        model = model_cls(model_params, task, run_id, result_dir)
+        model.log_line("Run %s starting." % run_id)
+        model.log_line(" Using the following task params: %s" % json.dumps(task_params_orig))
+        model.log_line(" Using the following model params: %s" % json.dumps(model_params))
+
+        if sys.stdin.isatty():
+            try:
+                git_sha = git_tag_run(run_id)
+                model.log_line(" git tagged as %s" % git_sha)
+            except:
+                print(" Tried tagging run in git, but failed.")
+                pass
+
+        model.initialize_model()
+        model.train(quiet=args.get('--quiet'), tf_summary_path=args.get('--tensorboard'))
+
+        if args.get('--run-test'):
+            test(model.best_model_file, data_path, result_dir, quiet=args.get('--quiet'), run_id=run_id)
 
 
 if __name__ == "__main__":

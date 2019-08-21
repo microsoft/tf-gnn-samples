@@ -21,9 +21,12 @@ from dpu_utils.utils import run_and_debug, RichPath
 from utils.model_utils import restore
 
 
-def test(model_path: str, test_data_path: Optional[RichPath], result_dir: str, quiet: bool = False):
-    model = restore(model_path, result_dir)
+def test(model_path: str, test_data_path: Optional[RichPath], result_dir: str, quiet: bool = False, run_id: str = None):
+    model = restore(model_path, result_dir, run_id)
+    model.params['max_nodes_in_batch'] = 2 * model.params['max_nodes_in_batch']  # We can process larger batches if we don't do training
     test_data_path = test_data_path or RichPath.create(model.task.default_data_path())
+    model.log_line(" Using the following task params: %s" % json.dumps(model.task.params))
+    model.log_line(" Using the following model params: %s" % json.dumps(model.params))
     model.test(test_data_path)
 
 

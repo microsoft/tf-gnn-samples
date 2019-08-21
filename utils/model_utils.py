@@ -47,7 +47,7 @@ def name_to_model_class(name: str) -> Type[Sparse_Graph_Model]:
     raise ValueError("Unknown model type '%s'" % name)
 
 
-def restore(saved_model_path: str, result_dir: str) -> None:
+def restore(saved_model_path: str, result_dir: str, run_id: str = None) -> None:
     print("Loading model from file %s." % saved_model_path)
     with open(saved_model_path, 'rb') as in_file:
         data_to_load = pickle.load(in_file)
@@ -55,7 +55,8 @@ def restore(saved_model_path: str, result_dir: str) -> None:
     model_cls = name_to_model_class(data_to_load['model_class'])
     task_cls, additional_task_params = name_to_task_class(data_to_load['task_class'])
 
-    run_id = "_".join([task_cls.name(), model_cls.name(), time.strftime("%Y-%m-%d-%H-%M-%S"), str(os.getpid())])
+    if run_id is None:
+        run_id = "_".join([task_cls.name(), model_cls.name(), time.strftime("%Y-%m-%d-%H-%M-%S"), str(os.getpid())])
 
     task = task_cls(data_to_load['task_params'])
     task.restore_from_metadata(data_to_load['task_metadata'])
