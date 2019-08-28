@@ -38,6 +38,7 @@ class Sparse_Graph_Model(ABC):
             'optimizer': 'Adam',
             'learning_rate': 0.001,
             'learning_rate_decay': 0.98,
+            'lr_for_num_graphs_per_batch': None,  # The LR is normalised so that we use it for exactly that number of graphs; no normalisation happens if the value is None
             'momentum': 0.85,
             'clamp_gradient_norm': 1.0,
             'random_seed': 0,
@@ -224,15 +225,26 @@ class Sparse_Graph_Model(ABC):
     def __make_train_step(self):
         trainable_vars = self.sess.graph.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES)
 
+        learning_rate = self.params['learning_rate']
+
+        lr_for_num_graphs_per_batch = self.params.get('lr_for_num_graphs_per_batch')
+        if lr_for_num_graphs_per_batch is not None:
+            # This ensures that the learning rate _per_ graph in the batch stays the same,
+            # which can be important for tasks in which the loss is defined per-graph
+            # (e.g., full graph regression tasks, or one-node-per-graph classification)
+            lr_norm_factor = (tf.cast(self.__placeholders['num_graphs'], tf.float32)
+                              / tf.constant(lr_for_num_graphs_per_batch, dtype=tf.float32))
+            learning_rate *= lr_norm_factor
+
         optimizer_name = self.params['optimizer'].lower()
         if optimizer_name == 'sgd':
-            optimizer = tf.train.GradientDescentOptimizer(learning_rate=self.params['learning_rate'])
+            optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate)
         elif optimizer_name == 'rmsprop':
-            optimizer = tf.train.RMSPropOptimizer(learning_rate=self.params['learning_rate'],
+            optimizer = tf.train.RMSPropOptimizer(learning_rate=learning_rate,
                                                   decay=self.params['learning_rate_decay'],
                                                   momentum=self.params['momentum'])
         elif optimizer_name == 'adam':
-            optimizer = tf.train.AdamOptimizer(learning_rate=self.params['learning_rate'])
+            optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
         else:
             raise Exception('Unknown optimizer "%s".' % (self.params['optimizer']))
 
