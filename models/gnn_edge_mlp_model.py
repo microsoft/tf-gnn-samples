@@ -35,7 +35,6 @@ class GNN_Edge_MLP_Model(Sparse_Graph_Model):
                          adjacency_lists: List[tf.Tensor],
                          type_to_num_incoming_edges: tf.Tensor,
                          num_timesteps: int,
-                         message_weights_dropout_ratio: Union[float, tf.Tensor],
                          ) -> tf.Tensor:
         assert self.params['graph_message_weights_dropout_ratio'] == 0.0, \
             "graph_message_weights_dropout_ratio does not apply to RGDCN model."

@@ -4,7 +4,7 @@ Usage:
    train.py [options] MODEL_NAME TASK_NAME
 
 MODEL_NAME has to be one of the supported models, which currently are
- GGNN, GNN-FiLM, RGAT, RGCN, RGDCN
+ GGNN, GNN-Edge-MLP, GNN-FiLM, RGAT, RGCN, RGDCN
 
 Options:
     -h --help                       Show this screen.

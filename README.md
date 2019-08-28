@@ -5,6 +5,7 @@ In the paper, a number of GNN architectures are discussed:
 * Gated Graph Neural Networks (GGNN) ([Li et al., 2015](#li-et-al-2015)).
 * Relational Graph Convolutional Networks (RGCN) ([Schlichtkrull et al., 2016](#schlichtkrull-et-al-2016)).
 * Relational Graph Attention Networks (RGAT) - a generalisation of Graph Attention Networks ([Veličković et al., 2018](#veličković-et-al-2018)) to several edge types.
+* Graph Neural Network with Edge MLPs (GNN-Edge-MLP) - a variant of RGCN in which messages on edges are computed using full MLPs, not just a single layer.
 * Relational Graph Dynamic Convolution Networks (RGDCN) - a new variant of RGCN in which the weights of convolutional layers are dynamically computed.
 * Graph Neural Networks with Feature-wise Linear Modulation (GNN-FiLM) - a new extension of RGCN with FiLM layers.
 
@@ -86,6 +87,7 @@ Currently, five model types are implemented:
 * `GGNN`: Gated Graph Neural Networks ([Li et al., 2015](#li-et-al-2015)).
 * `RGCN`: Relational Graph Convolutional Networks ([Schlichtkrull et al., 2017](#schlichtkrull-et-al-2017)).
 * `RGAT`: Relational Graph Attention Networks ([Veličković et al., 2018](#veličković-et-al-2018)).
+* `GNN-Edge-MLP`: Graph Neural Network with Edge MLPs - a variant of RGCN in which messages on edges are computed using full MLPs, not just a single layer.
 * `RGDCN`: Relational Graph Dynamic Convolution Networks - a new variant of RGCN in which the weights of convolutional layers are dynamically computed.
 * `GNN-FiLM`: Graph Neural Networks with Feature-wise Linear Modulation - a new extension of RGCN with FiLM layers.
 
