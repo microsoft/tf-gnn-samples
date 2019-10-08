@@ -168,6 +168,8 @@ class Sparse_Graph_Model(ABC):
                                       use_bias=False,
                                       activation=activation_fn,
                                       )(self.__ops['initial_node_features'])
+        else:
+            self.__ops['projected_node_features'] = self.__ops['initial_node_features']
 
         cur_node_representations = self.__ops['projected_node_features']
         last_residual_representations = tf.zeros_like(cur_node_representations)
