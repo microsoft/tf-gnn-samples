@@ -32,20 +32,21 @@ from test import test
 
 def run(args):
     azure_info_path = args.get('--azure-info', None)
-    model_cls = name_to_model_class(args['MODEL_NAME'])
+    model_cls, additional_model_params = name_to_model_class(args['MODEL_NAME'])
     task_cls, additional_task_params = name_to_task_class(args['TASK_NAME'])
 
     # Collect parameters from first the class defaults, potential task defaults, and then CLI:
     task_params = task_cls.default_params()
     task_params.update(additional_task_params)
     model_params = model_cls.default_params()
+    model_params.update(additional_model_params)
 
     # Load potential task-specific defaults:
     task_model_default_hypers_file = \
         os.path.join(os.path.dirname(__file__),
                      "tasks",
                      "default_hypers",
-                     "%s_%s.json" % (task_cls.name(), model_cls.name()))
+                     "%s_%s.json" % (task_cls.name(), model_cls.name(model_params)))
     if os.path.exists(task_model_default_hypers_file):
         print("Loading task/model-specific default parameters from %s." % task_model_default_hypers_file)
         with open(task_model_default_hypers_file, "rt") as f:
@@ -77,7 +78,7 @@ def run(args):
 
     for random_seed in random_seeds:
         model_params['random_seed'] = random_seed
-        run_id = "_".join([task_cls.name(), model_cls.name(), time.strftime("%Y-%m-%d-%H-%M-%S"), str(os.getpid())])
+        run_id = "_".join([task_cls.name(), model_cls.name(model_params), time.strftime("%Y-%m-%d-%H-%M-%S"), str(os.getpid())])
 
         model = model_cls(model_params, task, run_id, result_dir)
         model.log_line("Run %s starting." % run_id)

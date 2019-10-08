@@ -46,7 +46,7 @@ class Sparse_Graph_Model(ABC):
 
     @staticmethod
     @abstractmethod
-    def name() -> str:
+    def name(params: Dict[str, Any]) -> str:
         raise NotImplementedError()
 
     def __init__(self,
@@ -96,7 +96,7 @@ class Sparse_Graph_Model(ABC):
         weights_to_save = self.sess.run(vars_to_retrieve)
 
         data_to_save = {
-            "model_class": self.name(),
+            "model_class": self.name(self.params),
             "task_class": self.task.name(),
             "model_params": self.params,
             "task_params": self.task.params,

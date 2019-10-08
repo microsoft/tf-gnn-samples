@@ -24,7 +24,7 @@ class RGDCN_Model(Sparse_Graph_Model):
         return params
 
     @staticmethod
-    def name() -> str:
+    def name(params: Dict[str, Any]) -> str:
         return "RGDCN"
 
     def __init__(self, params: Dict[str, Any], task: Sparse_Graph_Task, run_id: str, result_dir: str) -> None:

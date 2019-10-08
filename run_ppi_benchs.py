@@ -16,7 +16,7 @@ import numpy as np
 from docopt import docopt
 from dpu_utils.utils import run_and_debug
 
-MODEL_TYPES = ["GGNN", "RGCN", "RGAT", "GNN-Edge-MLP", "GNN_FiLM"]
+MODEL_TYPES = ["GGNN", "RGCN", "RGAT", "GNN-Edge-MLP0", "GNN-Edge-MLP1", "GNN_FiLM"]
 
 TEST_RES_RE = re.compile('^Metrics: Avg MicroF1: (0.\d+)')
 TIME_RE = re.compile('^Training took (\d+)s')

@@ -1,0 +1,7 @@
+{"task_params": {},
+ "model_params": {"graph_num_layers": 5,
+                  "hidden_size": 256, 
+                  "max_nodes_in_batch": 6000,
+                  "graph_layer_input_dropout_keep_prob": 0.8
+                 }
+}

@@ -24,8 +24,8 @@ class GNN_Edge_MLP_Model(Sparse_Graph_Model):
         return params
 
     @staticmethod
-    def name() -> str:
-        return "GNN-Edge-MLP"
+    def name(params: Dict[str, Any]) -> str:
+        return "GNN-Edge-MLP%i" % (params['num_edge_hidden_layers'])
 
     def __init__(self, params: Dict[str, Any], task: Sparse_Graph_Task, run_id: str, result_dir: str) -> None:
         super().__init__(params, task, run_id, result_dir)

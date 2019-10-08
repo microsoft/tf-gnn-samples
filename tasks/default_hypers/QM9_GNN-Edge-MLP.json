@@ -1,7 +1,0 @@
-{
-    "task_params": {},
-    "model_params": {
-        "max_nodes_in_batch": 50000,
-        "num_edge_hidden_layers": 0
-    }
-}
