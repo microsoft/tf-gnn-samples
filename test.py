@@ -8,7 +8,8 @@ DATA_PATH is the location of the data to test on.
 
 Options:
     -h --help                       Show this screen.
-    --result_dir DIR                Directory to store logfiles and trained models. [default: trained_models]
+    --result-dir DIR                Directory to store logfiles and trained models. [default: trained_models]
+    --azure-info PATH               Azure authentication information file (JSON). [default: azure_auth.json]
     --quiet                         Show less output.
     --debug                         Turn on debugger.
 """
@@ -36,7 +37,7 @@ def run(args):
     test_data_path = args.get('DATA_PATH')
     if test_data_path is not None:
         test_data_path = RichPath.create(test_data_path, azure_info_path)
-    result_dir = args.get('--result_dir', 'trained_models')
+    result_dir = args.get('--result-dir', 'trained_models')
     test(model_path, test_data_path, result_dir, quiet=args.get('--quiet'))
 
 

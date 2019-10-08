@@ -65,7 +65,7 @@ def run(args):
             task_params[param_name] = RichPath.create(param_value, azure_info_path)
 
     # Now prepare to actually run by setting up directories, creating object instances and running:
-    result_dir = args.get('--result_dir', 'trained_models')
+    result_dir = args.get('--result-dir', 'trained_models')
     os.makedirs(result_dir, exist_ok=True)
     task = task_cls(task_params)
     data_path = args.get('--data-path') or task.default_data_path()
