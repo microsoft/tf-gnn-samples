@@ -150,6 +150,11 @@ The data for this task is included in the repository in `data/qm9`, which just
 contains a JSON representation of a pre-processed version of the dataset originally
 released by [Ramakrishnan et al., 2014](#ramakrishnan-et-al-2014).
 
+The results shown in Table 2 of the [technical report](#brockschmidt-2019) can
+be reproduced by running `python run_qm9_benchs.py qm9_results/`, but this will
+take a very long time (several days) and should best be distributed onto different
+compute nodes.
+
 ## VarMisuse
 The `VarMisuse` task (implemented in `tasks/varmisuse_task.py`) handles the
 variable misuse task first described by [Allamanis et al., 2018](#allamanis-et-al-2018).
@@ -164,6 +169,20 @@ To run experiments on this task, you need to download the data from
 https://aka.ms/iclr18-prog-graphs-dataset and unzip it.
 By default, the code looks for this data in `data/varmisuse/`, but this can be 
 changed by using `--data-path "SOME/OTHER/DIR"`.
+
+### Current Results
+Running `python run_varmisuse_benchs.py varmisuse_results/` should yield results
+looking like this (on a single NVidia V100, this will take about 2 weeks):
+
+| Model          | Valid Acc         | Test Acc          | TestOnly Acc      |
+|----------------|-------------------|-------------------|-------------------|
+| GGNN           | 0.821 (+/- 0.009) | 0.857 (+/- 0.005) | 0.793 (+/- 0.012) |
+| RGCN           | 0.857 (+/- 0.016) | 0.872 (+/- 0.015) | 0.814 (+/- 0.023) |
+| RGAT           | 0.842 (+/- 0.010) | 0.869 (+/- 0.007) | 0.812 (+/- 0.009) |
+| GNN-Edge-MLP0  | 0.834 (+/- 0.003) | 0.865 (+/- 0.002) | 0.805 (+/- 0.014) |
+| GNN-Edge-MLP1  | 0.844 (+/- 0.004) | 0.869 (+/- 0.003) | 0.814 (+/- 0.007) |
+| GNN_FiLM       | 0.846 (+/- 0.006) | 0.870 (+/- 0.002) | 0.813 (+/- 0.009) |
+
 
 # References
 
