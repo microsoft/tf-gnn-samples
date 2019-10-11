@@ -69,7 +69,7 @@ def run(args):
                 subprocess.check_call(["python",
                                        "test.py",
                                        "--quiet",
-                                       model,
+                                       model_file,
                                        "data/varmisuse/graphs-testonly",
                                        ],
                                       stdout=log_fh,
