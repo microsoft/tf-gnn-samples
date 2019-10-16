@@ -10,6 +10,8 @@ def sparse_rgin_layer(
         state_dim: Optional[int],
         num_timesteps: int = 1,
         activation_function: Optional[str] = "ReLU",
+        message_aggregation_function: str = "sum",
+        use_target_state_as_input: bool = False,
         num_MLP_hidden_layers: int = 1,
         learn_epsilon: bool = True,
         ) -> tf.Tensor:
@@ -53,6 +55,9 @@ def sparse_rgin_layer(
             parameter num_timesteps has to be 1.
         num_timesteps: Number of repeated applications of this message passing layer.
         activation_function: Type of activation function used.
+        message_aggregation_function: Type of aggregation function used for messages.
+        use_target_state_as_input: Flag indicating if the edge MLP should consume both
+            source and target state (True) or only source state (False).
         num_MLP_hidden_layers: Number of hidden layers of the MLPs.
         learn_epsilon: Flag indicating if the value of epsilon should be learned. If
             False, epsilon defaults to 0.
@@ -66,6 +71,7 @@ def sparse_rgin_layer(
 
     # === Prepare things we need across all timesteps:
     activation_fn = get_activation(activation_function)
+    message_aggregation_fn = get_aggregation_function(message_aggregation_function)
     aggregation_MLP = MLP(out_size=state_dim,
                           hidden_layers=num_MLP_hidden_layers,
                           activation_fun=activation_fn)
@@ -96,11 +102,18 @@ def sparse_rgin_layer(
         # Collect incoming messages per edge type
         for edge_type_idx, adjacency_list_for_edge_type in enumerate(adjacency_lists):
             edge_sources = adjacency_list_for_edge_type[:, 0]
+            edge_targets = adjacency_list_for_edge_type[:, 1]
             edge_source_states = \
                 tf.nn.embedding_lookup(params=cur_node_states,
                                        ids=edge_sources)  # Shape [E, D]
 
             edge_mlp_inputs = edge_source_states
+            if use_target_state_as_input:
+                edge_target_states = \
+                    tf.nn.embedding_lookup(params=cur_node_states,
+                                           ids=edge_targets)  # Shape [E, D]
+                edge_mlp_inputs = tf.concat([edge_source_states, edge_target_states],
+                                            axis=1)  # Shape [E, 2*D]
 
             messages = edge_type_to_edge_mlp[edge_type_idx](edge_mlp_inputs)  # Shape [E, D]
             messages_per_type.append(messages)
@@ -108,9 +121,9 @@ def sparse_rgin_layer(
         all_messages = tf.concat(messages_per_type, axis=0)  # Shape [M, D]
         all_messages = activation_fn(all_messages)  # Shape [M, D]  (Apply nonlinearity to Edge-MLP outputs as well)
         aggregated_messages = \
-            tf.unsorted_segment_sum(data=all_messages,
-                                    segment_ids=message_targets,
-                                    num_segments=num_nodes)  # Shape [V, D]
+            message_aggregation_fn(data=all_messages,
+                                   segment_ids=message_targets,
+                                   num_segments=num_nodes)  # Shape [V, D]
 
         new_node_states = aggregated_messages
         new_node_states += epsilon * activation_fn(self_loop_MLP(cur_node_states))
