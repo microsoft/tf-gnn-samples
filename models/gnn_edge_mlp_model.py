@@ -1,4 +1,4 @@
-from typing import Dict, Any, List, Union
+from typing import Dict, Any, List
 
 import tensorflow as tf
 
@@ -17,7 +17,6 @@ class GNN_Edge_MLP_Model(Sparse_Graph_Model):
             "graph_activation_function": "gelu",
             "message_aggregation_function": "sum",
             'graph_inter_layer_norm': True,
-            'graph_message_weights_dropout_ratio': 0.0,
             'use_target_state_as_input': True,
             'num_edge_hidden_layers': 1,
         })
@@ -36,8 +35,6 @@ class GNN_Edge_MLP_Model(Sparse_Graph_Model):
                          type_to_num_incoming_edges: tf.Tensor,
                          num_timesteps: int,
                          ) -> tf.Tensor:
-        assert self.params['graph_message_weights_dropout_ratio'] == 0.0, \
-            "graph_message_weights_dropout_ratio does not apply to RGDCN model."
         return sparse_gnn_edge_mlp_layer(
             node_embeddings=node_representations,
             adjacency_lists=adjacency_lists,

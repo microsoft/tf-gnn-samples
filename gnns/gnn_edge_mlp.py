@@ -1,27 +1,7 @@
-from typing import List, Optional, Union
+from typing import List, Optional
 import tensorflow as tf
 
-
-from utils import get_activation, get_aggregation_function, SMALL_NUMBER
-
-
-class EdgeMLP():
-    def __init__(self, out_size: int, num_hidden_layers: int = 1):
-        self.__layers = []
-        for _ in range(num_hidden_layers):
-            self.__layers.append(tf.layers.Dense(units=out_size,
-                                                 use_bias=False,
-                                                 activation=tf.nn.elu))
-        # Final layer, without activation:
-        self.__layers.append(tf.layers.Dense(units=out_size,
-                                             use_bias=False,
-                                             activation=None))
-
-    def __call__(self, input: tf.Tensor) -> tf.Tensor:
-        activations = input
-        for layer in self.__layers:
-            activations = layer(activations)
-        return activations
+from utils import get_activation, get_aggregation_function, SMALL_NUMBER, MLP
 
 
 def sparse_gnn_edge_mlp_layer(
@@ -92,7 +72,9 @@ def sparse_gnn_edge_mlp_layer(
     for edge_type_idx, adjacency_list_for_edge_type in enumerate(adjacency_lists):
         with tf.variable_scope("Edge_%i_MLP" % edge_type_idx):
             edge_type_to_edge_mlp.append(
-                EdgeMLP(out_size=state_dim, num_hidden_layers=num_edge_hidden_layers))
+                MLP(out_size=state_dim,
+                    hidden_layers=num_edge_hidden_layers,
+                    activation_fun=tf.nn.elu))
         edge_type_to_message_targets.append(adjacency_list_for_edge_type[:, 1])
 
     # Let M be the number of messages (sum of all E):
@@ -127,14 +109,14 @@ def sparse_gnn_edge_mlp_layer(
             messages_per_type.append(messages)
 
         all_messages = tf.concat(messages_per_type, axis=0)  # Shape [M, D]
-        all_messages = activation_fn(all_messages)  # Shape [M, D]
+        all_messages = activation_fn(all_messages)  # Shape [M, D]  (Apply nonlinearity to Edge-MLP outputs as well)
         aggregated_messages = \
             message_aggregation_fn(data=all_messages,
                                    segment_ids=message_targets,
                                    num_segments=num_nodes)  # Shape [V, D]
-        new_node_states = aggregated_messages
-        # new_node_states = activation_fn(new_node_states)
 
-        cur_node_states = tf.contrib.layers.layer_norm(new_node_states)
+        new_node_states = aggregated_messages
+        new_node_states = tf.contrib.layers.layer_norm(new_node_states)
+        cur_node_states = new_node_states
 
     return cur_node_states

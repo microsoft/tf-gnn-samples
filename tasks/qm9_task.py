@@ -160,17 +160,16 @@ class QM9_Task(Sparse_Graph_Task):
 
         task_metrics = {}
         losses = []
-        final_node_feature_size = model_ops['final_node_representations'].shape.as_list()[-1]
         for (internal_id, task_id) in enumerate(self.params['task_ids']):
             with tf.variable_scope("out_layer_task%i" % task_id):
                 with tf.variable_scope("regression_gate"):
                     regression_gate = \
-                        MLP(self.initial_node_feature_size + final_node_feature_size, 1, [],
-                            placeholders['out_layer_dropout_keep_prob'])
+                        MLP(out_size=1, hidden_layers=[], use_biases=True,
+                            dropout_rate=placeholders['out_layer_dropout_keep_prob'])
                 with tf.variable_scope("regression"):
                     regression_transform = \
-                        MLP(final_node_feature_size, 1, [],
-                            placeholders['out_layer_dropout_keep_prob'])
+                        MLP(out_size=1, hidden_layers=[], use_biases=True,
+                            dropout_rate=placeholders['out_layer_dropout_keep_prob'])
 
                 per_node_outputs = regression_transform(model_ops['final_node_representations'])
                 gate_input = tf.concat([model_ops['final_node_representations'],
