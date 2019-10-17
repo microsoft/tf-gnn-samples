@@ -15,6 +15,7 @@ class RGIN_Model(Sparse_Graph_Model):
             'hidden_size': 128,
             "graph_activation_function": "ReLU",
             'message_aggregation_function': "sum",
+            'graph_dense_between_every_num_gnn_layers': 10000,
             'graph_inter_layer_norm': True,
             'use_target_state_as_input': False,
             'graph_num_MLP_hidden_layers': 1,
