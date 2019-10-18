@@ -74,15 +74,16 @@ def sparse_rgin_layer(
     message_aggregation_fn = get_aggregation_function(message_aggregation_function)
     aggregation_MLP = MLP(out_size=state_dim,
                           hidden_layers=num_MLP_hidden_layers,
-                          activation_fun=activation_fn)
+                          activation_fun=activation_fn,
+                          name="Aggregation_MLP")
     edge_type_to_edge_mlp = []  # MLPs to compute the edge messages
     edge_type_to_message_targets = []  # List of tensors of message targets
     for edge_type_idx, adjacency_list_for_edge_type in enumerate(adjacency_lists):
-        with tf.variable_scope("Edge_%i_MLP" % edge_type_idx):
-            edge_type_to_edge_mlp.append(
-                MLP(out_size=state_dim,
-                    hidden_layers=num_MLP_hidden_layers,
-                    activation_fun=activation_fn))
+        edge_type_to_edge_mlp.append(
+            MLP(out_size=state_dim,
+                hidden_layers=num_MLP_hidden_layers,
+                activation_fun=activation_fn,
+                name="Edge_%i_MLP" % edge_type_idx))
         edge_type_to_message_targets.append(adjacency_list_for_edge_type[:, 1])
     # Initialize epsilon: Note that we merge the 1 + \epsilon from the Def. above:
     if learn_epsilon:
@@ -91,7 +92,8 @@ def sparse_rgin_layer(
         epsilon_plus_one = 1
     self_loop_MLP = MLP(out_size=state_dim,
                         hidden_layers=num_MLP_hidden_layers,
-                        activation_fun=activation_fn)
+                        activation_fun=activation_fn,
+                        name="SelfLoop_MLP")
 
     # Let M be the number of messages (sum of all E):
     message_targets = tf.concat(edge_type_to_message_targets, axis=0)  # Shape [M]

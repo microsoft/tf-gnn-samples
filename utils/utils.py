@@ -80,7 +80,9 @@ class MLP(object):
                  hidden_layers: Union[List[int], int] = 1,
                  use_biases: bool = False,
                  activation_fun: Optional[Callable[[tf.Tensor], tf.Tensor]] = tf.nn.relu,
-                 dropout_rate: Union[float, tf.Tensor] = 0.0):
+                 dropout_rate: Union[float, tf.Tensor] = 0.0,
+                 name: Optional[str] = "MLP",
+                 ):
         """
         Create new MLP with given number of hidden layers.
 
@@ -94,8 +96,6 @@ class MLP(object):
                 is always the direct result of a linear transformation)
             dropout_rate: Dropout applied to inputs of each MLP layer.
         """
-        self.__dropout_rate = dropout_rate
-
         if isinstance(hidden_layers, int):
             hidden_layer_sizes = [out_size] * hidden_layers
         else:
@@ -104,19 +104,23 @@ class MLP(object):
         if len(hidden_layer_sizes) > 1:
             assert activation_fun is not None, "Multiple linear layers without an activation"
 
-        self.__layers = []  # type: List[tf.layers.Dense]
-        for hidden_layer_size in hidden_layer_sizes:
-            self.__layers.append(tf.layers.Dense(units=hidden_layer_size,
+        self.__dropout_rate = dropout_rate
+        self.__name = name
+        with tf.variable_scope(self.__name):
+            self.__layers = []  # type: List[tf.layers.Dense]
+            for hidden_layer_size in hidden_layer_sizes:
+                self.__layers.append(tf.layers.Dense(units=hidden_layer_size,
+                                                     use_bias=use_biases,
+                                                     activation=activation_fun))
+            # Output layer:
+            self.__layers.append(tf.layers.Dense(units=out_size,
                                                  use_bias=use_biases,
-                                                 activation=activation_fun))
-        # Final layer, without nonlinearity:
-        self.__layers.append(tf.layers.Dense(units=out_size,
-                                             use_bias=use_biases,
-                                             activation=None))
+                                                 activation=None))
 
     def __call__(self, input: tf.Tensor) -> tf.Tensor:
-        activations = input
-        for layer in self.__layers:
-            activations = tf.nn.dropout(activations, rate=self.__dropout_rate)
-            activations = layer(activations)
-        return activations
+        with tf.variable_scope(self.__name):
+            activations = input
+            for layer in self.__layers[:-1]:
+                activations = tf.nn.dropout(activations, rate=self.__dropout_rate)
+                activations = layer(activations)
+            return self.__layers[-1](activations)

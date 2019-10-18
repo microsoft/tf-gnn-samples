@@ -70,11 +70,11 @@ def sparse_gnn_edge_mlp_layer(
     edge_type_to_edge_mlp = []  # MLPs to compute the edge messages
     edge_type_to_message_targets = []  # List of tensors of message targets
     for edge_type_idx, adjacency_list_for_edge_type in enumerate(adjacency_lists):
-        with tf.variable_scope("Edge_%i_MLP" % edge_type_idx):
-            edge_type_to_edge_mlp.append(
-                MLP(out_size=state_dim,
-                    hidden_layers=num_edge_hidden_layers,
-                    activation_fun=tf.nn.elu))
+        edge_type_to_edge_mlp.append(
+            MLP(out_size=state_dim,
+                hidden_layers=num_edge_hidden_layers,
+                activation_fun=tf.nn.elu,
+                name="Edge_%i_MLP" % edge_type_idx))
         edge_type_to_message_targets.append(adjacency_list_for_edge_type[:, 1])
 
     # Let M be the number of messages (sum of all E):
