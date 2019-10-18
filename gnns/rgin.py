@@ -86,9 +86,9 @@ def sparse_rgin_layer(
         edge_type_to_message_targets.append(adjacency_list_for_edge_type[:, 1])
     # Initialize epsilon: Note that we merge the 1 + \epsilon from the Def. above:
     if learn_epsilon:
-        epsilon = tf.get_variable("epsilon", shape=(), dtype=tf.float32, initializer=tf.ones_initializer, trainable=True)
+        epsilon_plus_one = tf.get_variable("epsilon", shape=(), dtype=tf.float32, initializer=tf.ones_initializer, trainable=True)
     else:
-        epsilon = 1
+        epsilon_plus_one = 1
     self_loop_MLP = MLP(out_size=state_dim,
                         hidden_layers=num_MLP_hidden_layers,
                         activation_fun=activation_fn)
@@ -126,7 +126,7 @@ def sparse_rgin_layer(
                                    num_segments=num_nodes)  # Shape [V, D]
 
         new_node_states = aggregated_messages
-        new_node_states += epsilon * activation_fn(self_loop_MLP(cur_node_states))
+        new_node_states += epsilon_plus_one * activation_fn(self_loop_MLP(cur_node_states))
         new_node_states = aggregation_MLP(new_node_states)
         new_node_states = activation_fn(new_node_states)  # Note that the final MLP layer has no activation, so we do that here explicitly
         new_node_states = tf.contrib.layers.layer_norm(new_node_states)

@@ -101,9 +101,12 @@ class MLP(object):
         else:
             hidden_layer_sizes = hidden_layers
 
+        if len(hidden_layer_sizes) > 1:
+            assert activation_fun is not None, "Multiple linear layers without an activation"
+
         self.__layers = []  # type: List[tf.layers.Dense]
-        for _ in hidden_layer_sizes:
-            self.__layers.append(tf.layers.Dense(units=out_size,
+        for hidden_layer_size in hidden_layer_sizes:
+            self.__layers.append(tf.layers.Dense(units=hidden_layer_size,
                                                  use_bias=use_biases,
                                                  activation=activation_fun))
         # Final layer, without nonlinearity:
