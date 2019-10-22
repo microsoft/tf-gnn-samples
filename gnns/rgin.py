@@ -12,7 +12,8 @@ def sparse_rgin_layer(
         activation_function: Optional[str] = "ReLU",
         message_aggregation_function: str = "sum",
         use_target_state_as_input: bool = False,
-        num_MLP_hidden_layers: int = 1,
+        num_edge_MLP_hidden_layers: Optional[int] = 1,
+        num_aggr_MLP_hidden_layers: Optional[int] = 1,
         learn_epsilon: bool = True,
         ) -> tf.Tensor:
     """
@@ -58,7 +59,11 @@ def sparse_rgin_layer(
         message_aggregation_function: Type of aggregation function used for messages.
         use_target_state_as_input: Flag indicating if the edge MLP should consume both
             source and target state (True) or only source state (False).
-        num_MLP_hidden_layers: Number of hidden layers of the MLPs.
+        num_edge_MLP_hidden_layers: Number of hidden layers of the MLPs used to transform
+            messages from neighbouring nodes. If None, the raw states are used directly.
+        num_aggr_MLP_hidden_layers: Number of hidden layers of the MLPs used on the
+            aggregation of messages from neighbouring nodes. If none, the aggregated messages
+            are used directly.
         learn_epsilon: Flag indicating if the value of epsilon should be learned. If
             False, epsilon defaults to 0.
 
@@ -72,28 +77,42 @@ def sparse_rgin_layer(
     # === Prepare things we need across all timesteps:
     activation_fn = get_activation(activation_function)
     message_aggregation_fn = get_aggregation_function(message_aggregation_function)
-    aggregation_MLP = MLP(out_size=state_dim,
-                          hidden_layers=num_MLP_hidden_layers,
-                          activation_fun=activation_fn,
-                          name="Aggregation_MLP")
-    edge_type_to_edge_mlp = []  # MLPs to compute the edge messages
+
+    if num_aggr_MLP_hidden_layers is not None:
+        aggregation_MLP = MLP(out_size=state_dim,
+                              hidden_layers=num_aggr_MLP_hidden_layers,
+                              activation_fun=activation_fn,
+                              name="Aggregation_MLP")  # type: Optional[MLP]
+    else:
+        aggregation_MLP = None
+
+    if num_edge_MLP_hidden_layers is not None:
+        edge_type_to_edge_mlp = []  # type: Optional[List[MLP]]  # MLPs to compute the edge messages
+    else:
+        edge_type_to_edge_mlp = None
     edge_type_to_message_targets = []  # List of tensors of message targets
     for edge_type_idx, adjacency_list_for_edge_type in enumerate(adjacency_lists):
-        edge_type_to_edge_mlp.append(
-            MLP(out_size=state_dim,
-                hidden_layers=num_MLP_hidden_layers,
-                activation_fun=activation_fn,
-                name="Edge_%i_MLP" % edge_type_idx))
+        if edge_type_to_edge_mlp is not None and num_edge_MLP_hidden_layers is not None:
+            edge_type_to_edge_mlp.append(
+                MLP(out_size=state_dim,
+                    hidden_layers=num_edge_MLP_hidden_layers,
+                    activation_fun=activation_fn,
+                    name="Edge_%i_MLP" % edge_type_idx))
         edge_type_to_message_targets.append(adjacency_list_for_edge_type[:, 1])
+
+    if num_edge_MLP_hidden_layers is not None:
+        self_loop_MLP = MLP(out_size=state_dim,
+                            hidden_layers=num_edge_MLP_hidden_layers,
+                            activation_fun=activation_fn,
+                            name="SelfLoop_MLP")  # type: Optional[MLP]
+    else:
+        self_loop_MLP = None
+
     # Initialize epsilon: Note that we merge the 1 + \epsilon from the Def. above:
     if learn_epsilon:
         epsilon_plus_one = tf.get_variable("epsilon", shape=(), dtype=tf.float32, initializer=tf.ones_initializer, trainable=True)
     else:
         epsilon_plus_one = 1
-    self_loop_MLP = MLP(out_size=state_dim,
-                        hidden_layers=num_MLP_hidden_layers,
-                        activation_fun=activation_fn,
-                        name="SelfLoop_MLP")
 
     # Let M be the number of messages (sum of all E):
     message_targets = tf.concat(edge_type_to_message_targets, axis=0)  # Shape [M]
@@ -117,19 +136,27 @@ def sparse_rgin_layer(
                 edge_mlp_inputs = tf.concat([edge_source_states, edge_target_states],
                                             axis=1)  # Shape [E, 2*D]
 
-            messages = edge_type_to_edge_mlp[edge_type_idx](edge_mlp_inputs)  # Shape [E, D]
+            if edge_type_to_edge_mlp is not None:
+                messages = edge_type_to_edge_mlp[edge_type_idx](edge_mlp_inputs)  # Shape [E, D]
+            else:
+                messages = edge_mlp_inputs
             messages_per_type.append(messages)
 
         all_messages = tf.concat(messages_per_type, axis=0)  # Shape [M, D]
-        all_messages = activation_fn(all_messages)  # Shape [M, D]  (Apply nonlinearity to Edge-MLP outputs as well)
+        if edge_type_to_edge_mlp is not None:
+            all_messages = activation_fn(all_messages)  # Shape [M, D]  (Apply nonlinearity to Edge-MLP outputs as well)
         aggregated_messages = \
             message_aggregation_fn(data=all_messages,
                                    segment_ids=message_targets,
                                    num_segments=num_nodes)  # Shape [V, D]
 
         new_node_states = aggregated_messages
-        new_node_states += epsilon_plus_one * activation_fn(self_loop_MLP(cur_node_states))
-        new_node_states = aggregation_MLP(new_node_states)
+        if self_loop_MLP is not None:
+            new_node_states += epsilon_plus_one * activation_fn(self_loop_MLP(cur_node_states))
+        else:
+            new_node_states += epsilon_plus_one * cur_node_states
+        if aggregation_MLP is not None:
+            new_node_states = aggregation_MLP(new_node_states)
         new_node_states = activation_fn(new_node_states)  # Note that the final MLP layer has no activation, so we do that here explicitly
         new_node_states = tf.contrib.layers.layer_norm(new_node_states)
         cur_node_states = new_node_states
