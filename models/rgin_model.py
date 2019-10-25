@@ -19,8 +19,7 @@ class RGIN_Model(Sparse_Graph_Model):
             'graph_inter_layer_norm': True,
             'use_target_state_as_input': False,
             'graph_num_edge_MLP_hidden_layers': 1,
-            'graph_num_aggr_MLP_hidden_layers': 1,
-            'graph_learn_epsilon': False,
+            'graph_num_aggr_MLP_hidden_layers': None,
         })
         return params
 
@@ -47,5 +46,4 @@ class RGIN_Model(Sparse_Graph_Model):
             use_target_state_as_input=self.params['use_target_state_as_input'],
             num_edge_MLP_hidden_layers=self.params['graph_num_edge_MLP_hidden_layers'],
             num_aggr_MLP_hidden_layers=self.params['graph_num_aggr_MLP_hidden_layers'],
-            learn_epsilon=self.params['graph_learn_epsilon'],
         )

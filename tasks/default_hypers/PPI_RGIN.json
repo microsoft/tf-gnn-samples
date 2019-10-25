@@ -1,6 +1,6 @@
 {
     "task_params": {
-        "add_self_loop_edges": false
+        "add_self_loop_edges": true
     },
     "model_params": {
         "patience": 25,
@@ -8,7 +8,6 @@
         "hidden_size": 320,
         "max_nodes_in_batch": 12000,
         "graph_num_MLP_hidden_layers": 1,
-        "graph_learn_epsilon": false,
         "graph_layer_input_dropout_keep_prob": 0.9
     }
 }

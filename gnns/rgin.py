@@ -13,8 +13,7 @@ def sparse_rgin_layer(
         message_aggregation_function: str = "sum",
         use_target_state_as_input: bool = False,
         num_edge_MLP_hidden_layers: Optional[int] = 1,
-        num_aggr_MLP_hidden_layers: Optional[int] = 1,
-        learn_epsilon: bool = True,
+        num_aggr_MLP_hidden_layers: Optional[int] = None,
         ) -> tf.Tensor:
     """
     Compute new graph states by neural message passing using MLPs for state updates
@@ -23,9 +22,8 @@ def sparse_rgin_layer(
     matrices A_\ell.
 
     We compute new states as follows:
-        h^{t+1}_v := MLP_{out}((1 + \epsilon) * MLP_{self}(h^t_v)
-                               + \sum_\ell \sum_{(u, v) \in A_\ell} MLP_\ell(h^t_u))
-    The learnable parameters of this are the MLPs and (if enabled) epsilon.
+        h^{t+1}_v := \sigma(MLP_{aggr}(\sum_\ell \sum_{(u, v) \in A_\ell} MLP_\ell(h^t_u)))
+    The learnable parameters of this are the MLPs MLP_\ell.
     This is derived from Cor. 6 of arXiv:1810.00826, instantiating the functions f, \phi
     with _separate_ MLPs. This is more powerful than the GIN formulation in Eq. (4.1) of
     arXiv:1810.00826, as we want to be able to distinguish graphs of the form
@@ -64,8 +62,6 @@ def sparse_rgin_layer(
         num_aggr_MLP_hidden_layers: Number of hidden layers of the MLPs used on the
             aggregation of messages from neighbouring nodes. If none, the aggregated messages
             are used directly.
-        learn_epsilon: Flag indicating if the value of epsilon should be learned. If
-            False, epsilon defaults to 0.
 
     Returns:
         float32 tensor of shape [V, state_dim]
@@ -99,20 +95,6 @@ def sparse_rgin_layer(
                     activation_fun=activation_fn,
                     name="Edge_%i_MLP" % edge_type_idx))
         edge_type_to_message_targets.append(adjacency_list_for_edge_type[:, 1])
-
-    if num_edge_MLP_hidden_layers is not None:
-        self_loop_MLP = MLP(out_size=state_dim,
-                            hidden_layers=num_edge_MLP_hidden_layers,
-                            activation_fun=activation_fn,
-                            name="SelfLoop_MLP")  # type: Optional[MLP]
-    else:
-        self_loop_MLP = None
-
-    # Initialize epsilon: Note that we merge the 1 + \epsilon from the Def. above:
-    if learn_epsilon:
-        epsilon_plus_one = tf.get_variable("epsilon", shape=(), dtype=tf.float32, initializer=tf.ones_initializer, trainable=True)
-    else:
-        epsilon_plus_one = 1
 
     # Let M be the number of messages (sum of all E):
     message_targets = tf.concat(edge_type_to_message_targets, axis=0)  # Shape [M]
@@ -151,10 +133,6 @@ def sparse_rgin_layer(
                                    num_segments=num_nodes)  # Shape [V, D]
 
         new_node_states = aggregated_messages
-        if self_loop_MLP is not None:
-            new_node_states += epsilon_plus_one * activation_fn(self_loop_MLP(cur_node_states))
-        else:
-            new_node_states += epsilon_plus_one * cur_node_states
         if aggregation_MLP is not None:
             new_node_states = aggregation_MLP(new_node_states)
         new_node_states = activation_fn(new_node_states)  # Note that the final MLP layer has no activation, so we do that here explicitly
