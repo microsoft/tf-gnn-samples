@@ -1,32 +1,41 @@
 from typing import List, Optional
 import tensorflow as tf
 
-from utils import get_activation, get_aggregation_function, SMALL_NUMBER, MLP
+from utils import get_activation, get_aggregation_function, MLP
 
 
-def sparse_gnn_edge_mlp_layer(
+def sparse_rgin_layer(
         node_embeddings: tf.Tensor,
         adjacency_lists: List[tf.Tensor],
-        type_to_num_incoming_edges: tf.Tensor,
         state_dim: Optional[int],
         num_timesteps: int = 1,
         activation_function: Optional[str] = "ReLU",
         message_aggregation_function: str = "sum",
-        normalize_by_num_incoming: bool = False,
-        use_target_state_as_input: bool = True,
-        num_edge_hidden_layers: int = 1
+        use_target_state_as_input: bool = False,
+        num_edge_MLP_hidden_layers: Optional[int] = 1,
+        num_aggr_MLP_hidden_layers: Optional[int] = None,
         ) -> tf.Tensor:
     """
-    Compute new graph states by neural message passing using an edge MLP.
+    Compute new graph states by neural message passing using MLPs for state updates
+    and message computation.
     For this, we assume existing node states h^t_v and a list of per-edge-type adjacency
     matrices A_\ell.
 
     We compute new states as follows:
-        h^{t+1}_v := \sum_\ell
-                     \sum_{(u, v) \in A_\ell}
-                        \sigma(1/c_{v,\ell} * MLP(h^t_u || h^t_v))
-        c_{\v,\ell} is usually 1 (but could also be the number of incoming edges).
-    The learnable parameters of this are the W_\ell, F_{\ell,\alpha}, F_{\ell,\beta} \in R^{D, D}.
+        h^{t+1}_v := \sigma(MLP_{aggr}(\sum_\ell \sum_{(u, v) \in A_\ell} MLP_\ell(h^t_u)))
+    The learnable parameters of this are the MLPs MLP_\ell.
+    This is derived from Cor. 6 of arXiv:1810.00826, instantiating the functions f, \phi
+    with _separate_ MLPs. This is more powerful than the GIN formulation in Eq. (4.1) of
+    arXiv:1810.00826, as we want to be able to distinguish graphs of the form
+     G_1 = (V={1, 2, 3}, E_1={(1, 2)}, E_2={(3, 2)})
+    and
+     G_2 = (V={1, 2, 3}, E_1={(3, 2)}, E_2={(1, 2)})
+    from each other. If we would treat all edges the same,
+    G_1.E_1 \cup G_1.E_2 == G_2.E_1 \cup G_2.E_2 would imply that the two graphs
+    become indistuingishable.
+    Hence, we introduce per-edge-type MLPs, which also means that we have to drop
+    the optimisation of modelling f \circ \phi by a single MLP used in the original
+    GIN formulation.
 
     We use the following abbreviations in shape descriptions:
     * V: number of nodes
@@ -40,22 +49,19 @@ def sparse_gnn_edge_mlp_layer(
         adjacency_lists: List of L adjacency lists, represented as int32 tensors of shape
             [E, 2]. Concretely, adjacency_lists[l][k,:] == [v, u] means that the k-th edge
             of type l connects node v to node u.
-        type_to_num_incoming_edges: float32 tensor of shape [L, V] representing the number
-            of incoming edges of a given type. Concretely, type_to_num_incoming_edges[l, v]
-            is the number of edge of type l connecting to node v.
         state_dim: Optional size of output dimension of the GNN layer. If not set, defaults
             to D, the dimensionality of the input. If different from the input dimension,
             parameter num_timesteps has to be 1.
         num_timesteps: Number of repeated applications of this message passing layer.
         activation_function: Type of activation function used.
         message_aggregation_function: Type of aggregation function used for messages.
-        normalize_by_num_incoming: Flag indicating if messages should be scaled by 1/(number
-            of incoming edges).
         use_target_state_as_input: Flag indicating if the edge MLP should consume both
             source and target state (True) or only source state (False).
-        num_edge_hidden_layers: Number of hidden layers of the edge MLP.
-        message_weights_dropout_ratio: Dropout ratio applied to the weights used
-            to compute message passing functions.
+        num_edge_MLP_hidden_layers: Number of hidden layers of the MLPs used to transform
+            messages from neighbouring nodes. If None, the raw states are used directly.
+        num_aggr_MLP_hidden_layers: Number of hidden layers of the MLPs used on the
+            aggregation of messages from neighbouring nodes. If none, the aggregated messages
+            are used directly.
 
     Returns:
         float32 tensor of shape [V, state_dim]
@@ -67,14 +73,27 @@ def sparse_gnn_edge_mlp_layer(
     # === Prepare things we need across all timesteps:
     activation_fn = get_activation(activation_function)
     message_aggregation_fn = get_aggregation_function(message_aggregation_function)
-    edge_type_to_edge_mlp = []  # MLPs to compute the edge messages
+
+    if num_aggr_MLP_hidden_layers is not None:
+        aggregation_MLP = MLP(out_size=state_dim,
+                              hidden_layers=num_aggr_MLP_hidden_layers,
+                              activation_fun=activation_fn,
+                              name="Aggregation_MLP")  # type: Optional[MLP]
+    else:
+        aggregation_MLP = None
+
+    if num_edge_MLP_hidden_layers is not None:
+        edge_type_to_edge_mlp = []  # type: Optional[List[MLP]]  # MLPs to compute the edge messages
+    else:
+        edge_type_to_edge_mlp = None
     edge_type_to_message_targets = []  # List of tensors of message targets
     for edge_type_idx, adjacency_list_for_edge_type in enumerate(adjacency_lists):
-        edge_type_to_edge_mlp.append(
-            MLP(out_size=state_dim,
-                hidden_layers=num_edge_hidden_layers,
-                activation_fun=tf.nn.elu,
-                name="Edge_%i_MLP" % edge_type_idx))
+        if edge_type_to_edge_mlp is not None and num_edge_MLP_hidden_layers is not None:
+            edge_type_to_edge_mlp.append(
+                MLP(out_size=state_dim,
+                    hidden_layers=num_edge_MLP_hidden_layers,
+                    activation_fun=activation_fn,
+                    name="Edge_%i_MLP" % edge_type_idx))
         edge_type_to_message_targets.append(adjacency_list_for_edge_type[:, 1])
 
     # Let M be the number of messages (sum of all E):
@@ -99,23 +118,24 @@ def sparse_gnn_edge_mlp_layer(
                 edge_mlp_inputs = tf.concat([edge_source_states, edge_target_states],
                                             axis=1)  # Shape [E, 2*D]
 
-            messages = edge_type_to_edge_mlp[edge_type_idx](edge_mlp_inputs)  # Shape [E, D]
-
-            if normalize_by_num_incoming:
-                per_message_num_incoming_edges = \
-                    tf.nn.embedding_lookup(params=type_to_num_incoming_edges[edge_type_idx, :],
-                                           ids=edge_targets)  # Shape [E, H]
-                messages = tf.expand_dims(1.0 / (per_message_num_incoming_edges + SMALL_NUMBER), axis=-1) * messages
+            if edge_type_to_edge_mlp is not None:
+                messages = edge_type_to_edge_mlp[edge_type_idx](edge_mlp_inputs)  # Shape [E, D]
+            else:
+                messages = edge_mlp_inputs
             messages_per_type.append(messages)
 
         all_messages = tf.concat(messages_per_type, axis=0)  # Shape [M, D]
-        all_messages = activation_fn(all_messages)  # Shape [M, D]  (Apply nonlinearity to Edge-MLP outputs as well)
+        if edge_type_to_edge_mlp is not None:
+            all_messages = activation_fn(all_messages)  # Shape [M, D]  (Apply nonlinearity to Edge-MLP outputs as well)
         aggregated_messages = \
             message_aggregation_fn(data=all_messages,
                                    segment_ids=message_targets,
                                    num_segments=num_nodes)  # Shape [V, D]
 
         new_node_states = aggregated_messages
+        if aggregation_MLP is not None:
+            new_node_states = aggregation_MLP(new_node_states)
+        new_node_states = activation_fn(new_node_states)  # Note that the final MLP layer has no activation, so we do that here explicitly
         new_node_states = tf.contrib.layers.layer_norm(new_node_states)
         cur_node_states = new_node_states
 

@@ -5,6 +5,7 @@ In the paper, a number of GNN architectures are discussed:
 * Gated Graph Neural Networks (GGNN) ([Li et al., 2015](#li-et-al-2015)).
 * Relational Graph Convolutional Networks (RGCN) ([Schlichtkrull et al., 2016](#schlichtkrull-et-al-2016)).
 * Relational Graph Attention Networks (RGAT) - a generalisation of Graph Attention Networks ([Veličković et al., 2018](#veličković-et-al-2018)) to several edge types.
+* Relational Graph Isomorphism Networks (RGIN) - a generalisation of Graph Isomorphism Networks ([Xu et al., 2019](#xu-et-al-2019)) to several edge types.
 * Graph Neural Network with Edge MLPs (GNN-Edge-MLP) - a variant of RGCN in which messages on edges are computed using full MLPs, not just a single layer.
 * Relational Graph Dynamic Convolution Networks (RGDCN) - a new variant of RGCN in which the weights of convolutional layers are dynamically computed.
 * Graph Neural Networks with Feature-wise Linear Modulation (GNN-FiLM) - a new extension of RGCN with FiLM layers.
@@ -87,6 +88,7 @@ Currently, five model types are implemented:
 * `GGNN`: Gated Graph Neural Networks ([Li et al., 2015](#li-et-al-2015)).
 * `RGCN`: Relational Graph Convolutional Networks ([Schlichtkrull et al., 2017](#schlichtkrull-et-al-2017)).
 * `RGAT`: Relational Graph Attention Networks ([Veličković et al., 2018](#veličković-et-al-2018)).
+* `RGIN`: Relational Graph Isomorphism Networks ([Xu et al., 2019](#xu-et-al-2019)).
 * `GNN-Edge-MLP`: Graph Neural Network with Edge MLPs - a variant of RGCN in which messages on edges are computed using full MLPs, not just a single layer applied to the source state.
 * `RGDCN`: Relational Graph Dynamic Convolution Networks - a new variant of RGCN in which the weights of convolutional layers are dynamically computed.
 * `GNN-FiLM`: Graph Neural Networks with Feature-wise Linear Modulation - a new extension of RGCN with FiLM layers.
@@ -134,10 +136,11 @@ like this (on an NVidia V100):
 |---------------|-------------------|------------|
 | GGNN          | 0.990 (+/- 0.001) |      432.6 |
 | RGCN          | 0.989 (+/- 0.000) |      759.0 |
-| GAT           | 0.989 (+/- 0.001) |      782.3 |
+| RGAT          | 0.989 (+/- 0.001) |      782.3 |
+| RGIN          | 0.991 (+/- 0.001) |      704.8 |
 | GNN-Edge-MLP0 | 0.992 (+/- 0.000) |      556.9 |
 | GNN-Edge-MLP1 | 0.992 (+/- 0.001) |      479.2 |
-| GNN-FiLM      | 0.992 (+/- 0.000) |      308.1 |
+| GNN_FiLM      | 0.992 (+/- 0.000) |      308.1 |
 
 ## QM9
 The `QM9` task (implemented in `tasks/qm9_task.py`) handles the quantum chemistry
@@ -179,6 +182,7 @@ looking like this (on a single NVidia V100, this will take about 2 weeks):
 | GGNN           | 0.821 (+/- 0.009) | 0.857 (+/- 0.005) | 0.793 (+/- 0.012) |
 | RGCN           | 0.857 (+/- 0.016) | 0.872 (+/- 0.015) | 0.814 (+/- 0.023) |
 | RGAT           | 0.842 (+/- 0.010) | 0.869 (+/- 0.007) | 0.812 (+/- 0.009) |
+| RGIN           | 0.842 (+/- 0.010) | 0.871 (+/- 0.001) | 0.811 (+/- 0.009) |
 | GNN-Edge-MLP0  | 0.834 (+/- 0.003) | 0.865 (+/- 0.002) | 0.805 (+/- 0.014) |
 | GNN-Edge-MLP1  | 0.844 (+/- 0.004) | 0.869 (+/- 0.003) | 0.814 (+/- 0.007) |
 | GNN_FiLM       | 0.846 (+/- 0.006) | 0.870 (+/- 0.002) | 0.813 (+/- 0.009) |
@@ -221,6 +225,11 @@ and Tina Eliassi-Rad. Collective Classification in Network Data. AI magazine,
 Petar Veličković, Guillem Cucurull, Arantxa Casanova, Adriana Romero, Pietro
 Liò, and Yoshua Bengio. Graph Attention Networks. In International Conference
 on Learning Representations (ICLR), 2018. (https://arxiv.org/pdf/1710.10903.pdf)
+
+#### Xu et al. 2019
+Keyulu Xu, Weihua Hu, Jure Leskovec, and Stefanie Jegelka. How Powerful are
+Graph Neural Networks? In International Conference on Learning Representations
+(ICLR), 2019. (https://arxiv.org/pdf/1810.00826.pdf)
 
 #### Zitnik & Leskovec, 2017
 Marinka Zitnik and Jure Leskovec. Predicting Multicellular Function Through

@@ -16,7 +16,7 @@ import numpy as np
 from docopt import docopt
 from dpu_utils.utils import run_and_debug
 
-MODEL_TYPES = ["GGNN", "RGCN", "RGAT", "GNN_FiLM"]
+MODEL_TYPES = ["GGNN", "RGCN", "RGAT", "RGIN", "GNN-Edge-MLP0", "GNN-Edge-MLP1", "GNN_FiLM"]
 TASKS = ["mu", "alpha", "HOMO", "LUMO", "gap", "R2", "ZPVE", "U0", "U", "H", "G", "Cv", "Omega"]
 
 TEST_RES_RE = re.compile('^Metrics: MAEs: \d+:([0-9.]+) \| Error Ratios: \d+:([0-9.]+)')

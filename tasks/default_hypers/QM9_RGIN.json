@@ -1,0 +1,29 @@
+{
+    "task_params": {
+        "add_self_loop_edges": true
+    },
+    "model_params": {
+        "max_nodes_in_batch": 50000,
+        "graph_num_layers": 6,
+        "graph_num_timesteps_per_layer": 1,
+        "graph_layer_input_dropout_keep_prob": 0.9,
+        "graph_dense_between_every_num_gnn_layers": 32,
+        "graph_model_activation_function": "tanh",
+        "graph_residual_connection_every_num_layers": 2,
+        "graph_inter_layer_norm": false,
+        "max_epochs": 10000,
+        "patience": 25,
+        "optimizer": "RMSProp",
+        "learning_rate": 0.000700776770702023,
+        "learning_rate_decay": 0.98,
+        "lr_for_num_graphs_per_batch": null,
+        "momentum": 0.85,
+        "clamp_gradient_norm": 1.0,
+        "hidden_size": 128,
+        "graph_activation_function": "elu",
+        "message_aggregation_function": "sum",
+        "use_target_state_as_input": false,
+        "graph_num_edge_MLP_hidden_layers": 1,
+        "graph_num_aggr_MLP_hidden_layers": null
+    }
+}

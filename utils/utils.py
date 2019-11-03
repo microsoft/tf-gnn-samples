@@ -1,6 +1,5 @@
-from typing import Optional
+from typing import Optional, Callable, Union, List
 
-import numpy as np
 import tensorflow as tf
 
 
@@ -76,35 +75,52 @@ def micro_f1(logits, labels):
 
 
 class MLP(object):
-    def __init__(self, in_size, out_size, hid_sizes, dropout_keep_prob):
-        self.in_size = in_size
-        self.out_size = out_size
-        self.hid_sizes = hid_sizes
-        self.dropout_keep_prob = dropout_keep_prob
-        self.params = self.make_network_params()
+    def __init__(self,
+                 out_size: int,
+                 hidden_layers: Union[List[int], int] = 1,
+                 use_biases: bool = False,
+                 activation_fun: Optional[Callable[[tf.Tensor], tf.Tensor]] = tf.nn.relu,
+                 dropout_rate: Union[float, tf.Tensor] = 0.0,
+                 name: Optional[str] = "MLP",
+                 ):
+        """
+        Create new MLP with given number of hidden layers.
 
-    def make_network_params(self):
-        dims = [self.in_size] + self.hid_sizes + [self.out_size]
-        weight_sizes = list(zip(dims[:-1], dims[1:]))
-        weights = [tf.Variable(self.init_weights(s), name='MLP_W_layer%i' % i)
-                   for (i, s) in enumerate(weight_sizes)]
-        biases = [tf.Variable(np.zeros(s[-1]).astype(np.float32), name='MLP_b_layer%i' % i)
-                  for (i, s) in enumerate(weight_sizes)]
+        Arguments:
+            out_size: Dimensionality of output.
+            hidden_layers: Either an integer determining number of hidden layers, who will have out_size units each;
+                or list of integers whose lengths determines the number of hidden layers and whose contents the
+                number of units in each layer.
+            use_biases: Flag indicating use of bias in fully connected layers.
+            activation_fun: Activation function applied between hidden layers (NB: the output of the MLP
+                is always the direct result of a linear transformation)
+            dropout_rate: Dropout applied to inputs of each MLP layer.
+        """
+        if isinstance(hidden_layers, int):
+            hidden_layer_sizes = [out_size] * hidden_layers
+        else:
+            hidden_layer_sizes = hidden_layers
 
-        network_params = {
-            "weights": weights,
-            "biases": biases,
-        }
+        if len(hidden_layer_sizes) > 1:
+            assert activation_fun is not None, "Multiple linear layers without an activation"
 
-        return network_params
+        self.__dropout_rate = dropout_rate
+        self.__name = name
+        with tf.variable_scope(self.__name):
+            self.__layers = []  # type: List[tf.layers.Dense]
+            for hidden_layer_size in hidden_layer_sizes:
+                self.__layers.append(tf.layers.Dense(units=hidden_layer_size,
+                                                     use_bias=use_biases,
+                                                     activation=activation_fun))
+            # Output layer:
+            self.__layers.append(tf.layers.Dense(units=out_size,
+                                                 use_bias=use_biases,
+                                                 activation=None))
 
-    def init_weights(self, shape):
-        return np.sqrt(6.0 / (shape[-2] + shape[-1])) * (2 * np.random.rand(*shape).astype(np.float32) - 1)
-
-    def __call__(self, inputs):
-        acts = inputs
-        for W, b in zip(self.params["weights"], self.params["biases"]):
-            hid = tf.matmul(acts, tf.nn.dropout(W, rate=1.0 - self.dropout_keep_prob)) + b
-            acts = tf.nn.relu(hid)
-        last_hidden = hid
-        return last_hidden
+    def __call__(self, input: tf.Tensor) -> tf.Tensor:
+        with tf.variable_scope(self.__name):
+            activations = input
+            for layer in self.__layers[:-1]:
+                activations = tf.nn.dropout(activations, rate=self.__dropout_rate)
+                activations = layer(activations)
+            return self.__layers[-1](activations)

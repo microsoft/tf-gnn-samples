@@ -5,7 +5,7 @@ from typing import Tuple, Type, Dict, Any
 import pickle
 
 from models import (Sparse_Graph_Model, GGNN_Model, GNN_FiLM_Model, GNN_Edge_MLP_Model,
-                    RGAT_Model, RGCN_Model, RGDCN_Model)
+                    RGAT_Model, RGCN_Model, RGDCN_Model, RGIN_Model)
 from tasks import Sparse_Graph_Task, QM9_Task, Citation_Network_Task, PPI_Task, VarMisuse_Task
 
 
@@ -49,6 +49,8 @@ def name_to_model_class(name: str) -> Tuple[Type[Sparse_Graph_Model], Dict[str, 
         return RGCN_Model, {}
     if name in ["rgdcn", "rgdcn_model"]:
         return RGDCN_Model, {}
+    if name in ["rgin", "rgin_model"]:
+        return RGIN_Model, {}
 
     raise ValueError("Unknown model type '%s'" % name)
 
