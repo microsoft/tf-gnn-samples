@@ -168,10 +168,14 @@ def _load_data(paths: List[RichPath],
                no_parallel: bool = False,
                ) -> Iterable[GraphSample]:
     if no_parallel:
-        return [_load_single_sample(raw_sample, unsplittable_node_names, graph_node_label_max_num_chars,
-                                    max_variable_candidates, add_self_loop_edges)
-                for path in paths
-                for raw_sample in path.read_by_file_suffix()]
+        for path in paths:
+            for raw_sample in path.read_by_file_suffix():
+                yield _load_single_sample(raw_sample,
+                                          unsplittable_node_names,
+                                          graph_node_label_max_num_chars,
+                                          max_variable_candidates,
+                                          add_self_loop_edges,
+                                          )
 
     path_queue = Queue(maxsize=len(paths) + 1)
     result_queue = Queue()
