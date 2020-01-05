@@ -168,8 +168,12 @@ The implementation illustrates how to handle the case of inductive graph
 learning with predictions based on node selection.
 You can call this by running `python train.py MODEL VarMisuse`.
 
-To run experiments on this task, you need to download the data from
-https://aka.ms/iclr18-prog-graphs-dataset and unzip it.
+To run experiments on this task, you need to download the dataset from
+https://aka.ms/iclr18-prog-graphs-dataset.
+To make this usable for the data loading code in this repository, you then need
+to edit the top lines of the script `reorg_varmisuse_data.sh` (from this repo)
+to point to the downloaded zip file and the directory you want to extract the
+data to, and then run it. Note that this will take a relatively long time.
 By default, the code looks for this data in `data/varmisuse/`, but this can be 
 changed by using `--data-path "SOME/OTHER/DIR"`.
 
