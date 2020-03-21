@@ -30,6 +30,6 @@ for file in "${OUTDIR}"/*/*.gz; do
 done
 
 for fold in train valid test testonly; do
-    python "$CODEDIR/utils/varmisuse_data_splitter.py" "${OUTDIR}/graphs-${fold}-raw/" "${OUTDIR}/graphs-${fold}/"
+    python3 "$CODEDIR/utils/varmisuse_data_splitter.py" "${OUTDIR}/graphs-${fold}-raw/" "${OUTDIR}/graphs-${fold}/"
     rm -rf "${OUTDIR}/graphs-${fold}-raw/"
 done
