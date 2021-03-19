@@ -123,9 +123,15 @@ The implementation illustrates how to handle the case of inductive graph
 learning with node-level predictions.
 You can call this by running `python train.py MODEL PPI`.
 
-To run experiments on this task, you need to download the data from
-https://s3.us-east-2.amazonaws.com/dgl.ai/dataset/ppi.zip. By default, the
-code looks for this data in `data/ppi`, but this can be changed
+To run experiments on this task, you need to download the [data](https://data.dgl.ai/dataset/ppi.zip) 
+from. 
+
+```
+curl -LO https://data.dgl.ai/dataset/ppi.zip
+unzip ppi.zip -d <path-to-directory>
+```
+
+By default, the code looks for this data in `data/ppi`, but this can be changed
 by using `--data-path "SOME/OTHER/DIR"`.
 
 ### Current Results
