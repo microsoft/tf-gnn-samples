@@ -47,7 +47,7 @@ So for example, to choose a different number of layers,
 
 Results of the training run will be saved as well in a directory (by default
 `trained_models/`, but this can be set using the `--result_dir` flag).
-Concretely, the following three files are created:
+Concretely, the following two files are created:
 * `${RESULT_DIR}/${RUN_NAME}.log`: A log of the training run.
 * `${RESULT_DIR}/${RUN_NAME}_best_model.pickle`: A dump of the model weights 
   achieving the best results on the validation set.
