@@ -129,11 +129,11 @@ class Sparse_Graph_Model(ABC):
     def __make_model(self):
         self.task.make_task_input_model(self.__placeholders, self.__ops)
 
-        with tf.variable_scope("graph_model"):
+        with tf.compat.v1.variable_scope("graph_model"):
             self.__placeholders['num_graphs'] = \
-                tf.placeholder(dtype=tf.int64, shape=[], name='num_graphs')
+                tf.compat.v1.placeholder(dtype=tf.int64, shape=[], name='num_graphs')
             self.__placeholders['graph_layer_input_dropout_keep_prob'] = \
-                tf.placeholder_with_default(1.0, shape=[], name='graph_layer_input_dropout_keep_prob')
+                tf.compat.v1.placeholder_with_default(1.0, shape=[], name='graph_layer_input_dropout_keep_prob')
 
             self.__build_graph_propagation_model()
 
