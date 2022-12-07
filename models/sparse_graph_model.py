@@ -65,12 +65,12 @@ class Sparse_Graph_Model(ABC):
         # Build the actual model
         random.seed(params['random_seed'])
         np.random.seed(params['random_seed'])
-        config = tf.ConfigProto()
+        config = tf.compat.v1.ConfigProto()
         config.gpu_options.allow_growth = True
         self.graph = tf.Graph()
-        self.sess = tf.Session(graph=self.graph, config=config)
+        self.sess = tf.compat.v1.Session(graph=self.graph, config=config)
         with self.graph.as_default():
-            tf.set_random_seed(self.params['random_seed'])
+            tf.random.set_seed(self.params['random_seed'])
             self.__make_model()
 
     @property
