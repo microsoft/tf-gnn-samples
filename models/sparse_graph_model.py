@@ -174,7 +174,7 @@ class Sparse_Graph_Model(ABC):
         cur_node_representations = self.__ops['projected_node_features']
         last_residual_representations = tf.zeros_like(cur_node_representations)
         for layer_idx in range(self.params['graph_num_layers']):
-            with tf.variable_scope('gnn_layer_%i' % layer_idx):
+            with tf.compat.v1.variable_scope('gnn_layer_%i' % layer_idx):
                 cur_node_representations = \
                     tf.nn.dropout(cur_node_representations, rate=1.0 - self.__placeholders['graph_layer_input_dropout_keep_prob'])
                 if layer_idx % self.params['graph_residual_connection_every_num_layers'] == 0:
