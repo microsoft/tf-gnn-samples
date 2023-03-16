@@ -371,13 +371,13 @@ class VarMisuse_Task(Sparse_Graph_Task):
                                model_ops: Dict[str, tf.Tensor],
                                ) -> None:
         placeholders['slot_node_ids'] = \
-            tf.placeholder(dtype=tf.int32, shape=[None], name='slot_node_ids')
+            tf.compat.v1.placeholder(dtype=tf.int32, shape=[None], name='slot_node_ids')
         placeholders['candidate_node_ids'] = \
-            tf.placeholder(dtype=tf.int32, shape=[None, None], name='candidate_node_ids')
+            tf.compat.v1.placeholder(dtype=tf.int32, shape=[None, None], name='candidate_node_ids')
         placeholders['candidate_node_ids_mask'] = \
-            tf.placeholder(dtype=tf.float32, shape=[None, None], name='candidate_node_ids_mask')
+            tf.compat.v1.placeholder(dtype=tf.float32, shape=[None, None], name='candidate_node_ids_mask')
         placeholders['out_layer_dropout_rate'] = \
-            tf.placeholder_with_default(0.0, shape=[], name='out_layer_dropout_rate')
+            tf.compat.v1.placeholder_with_default(0.0, shape=[], name='out_layer_dropout_rate')
 
         final_node_repr_size = model_ops['final_node_representations'].shape.as_list()[-1]
         num_candidate_vars = self.params['max_variable_candidates']
